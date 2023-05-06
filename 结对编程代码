@@ -1,0 +1,319 @@
+#include <iostream>
+#include<vector>
+#include<queue>
+#include<Windows.h>
+#include<math.h>
+#include<stdlib.h>
+#include<stdio.h>
+using namespace std;
+#define OK 1
+#define ERROR 0
+typedef int Status;
+typedef struct TreeNode
+{
+    int num;
+    struct TreeNode*lchild;
+    struct TreeNode*rchild;
+    TreeNode(int x):
+	num(x),lchild(NULL),rchild(NULL){}
+}*BiTree;
+TreeNode *reBuildTree(vector<int>level,vector<int>vin)
+{
+    if(0==vin.size())return NULL;           //每次递归中序遍历的序列都会被分解成对应的左右子树的序列，等到为大小0的时候
+                                            //递归开始返回
+    vector<int>leftlevel,rightlevel;       //保存左子树的层序遍历
+    vector<int>leftvin,rightvin;           //保存右子树的层序遍历
+    int root=0;                            //用以记录根节点在中序遍历序列中的下标
+    for(int i=0;i<vin.size();i++)
+    {
+        if(vin[i]==level[0])            //层序遍历的第一个节点一定会是根节点
+        {
+            root=i;
+            break;
+        }
+    }
+    TreeNode *head=new TreeNode(level[0]);            //创建根节点
+    //根据root来分割层序遍历中的左右子树和中序遍历中的左右子树
+ 
+    for(int i=0;i<root;i++)
+	{
+        leftvin.push_back(vin[i]);
+    }
+    //根据中序遍历的左子树在层序遍历中找到相同的然后压入,循环结束以后左子树的层序遍历就找到了
+    for(int i=1;i<level.size();i++)
+    {
+       for(int j=0;j<leftvin.size();j++)
+       {
+           if(leftvin[j]==level[i])
+           {
+               leftlevel.push_back(level[i]);
+			   break;
+           }
+       }
+    }
+     for(int i=root+1;i<vin.size();i++)
+    {
+        rightvin.push_back(vin[i]);
+    }
+    //根据中序遍历的右子树在层序遍历中找到相同的然后压入,循环结束以后右子树的层序遍历就找到了
+    for(int i=1;i<level.size();i++)
+    {
+       for(int j=0;j<rightvin.size();j++)
+       {
+           if(rightvin[j]==level[i])
+           {
+               rightlevel.push_back(level[i]);
+           }
+       }
+    }
+    //递归构建二叉树
+    head->lchild=reBuildTree(leftlevel, leftvin);
+    head->rchild=reBuildTree(rightlevel,rightvin);
+    return head;
+}
+TreeNode *BuildTree(int *a,int *b,int n)
+{
+ 
+    int k;
+	if (n==0)
+	{
+		return NULL;
+	}
+	    int root = a[0];
+		TreeNode *BT = (TreeNode *)malloc(sizeof(TreeNode));	
+		BT->num = root;                //树的根节点的值
+		for (k = 0; k < n;k++)          //在b中查找b[k]=root的根节点
+		{                  
+			if (b[k]==root) 
+			{
+				break;
+			}
+		}
+		BT->lchild = BuildTree(a+1,b,k);               //递归创建左子树
+		BT->rchild= BuildTree(a+k+1,b+k+1,n-k-1);        //递归创建右子树
+	return BT;
+}
+TreeNode* mergeTrees(TreeNode* t1, TreeNode* t2)
+{
+        if(t1==NULL)
+		{
+            return t2;
+        }
+        if(t2==NULL)
+		{
+            return t1;
+        }
+        t1->num=t1->num+t2->num;
+        t1->lchild=mergeTrees(t1->lchild, t2->lchild);
+        t1->rchild=mergeTrees(t1->rchild, t2->rchild);
+        return t1;
+ }
+void presearch2(TreeNode *root)
+{
+    if(root==NULL)
+        return ;
+    cout<<root->num<<" ";
+    presearch2(root->lchild);
+    presearch2(root->rchild);
+}
+void printBinTree(TreeNode* head) 
+{
+ queue<TreeNode*> q;
+ TreeNode* b;
+ //树为空
+ if (head == NULL) 
+ {
+	 cout << "treeNode is empty!" <<endl;
+	 return;
+ }
+ //头节点入队
+ q.push(head);
+ while (!q.empty())
+ { 
+	 b = q.front();         //拿到队头，队头出队
+	 q.pop();
+	 cout << b->num <<" ";  //打印对头的数据 
+	 if (b->lchild)         //对头的左孩子存在就入队
+	 {
+		q.push(b->lchild);
+	 }
+	if (b->rchild)        //对头的右孩子存在就入队
+	{
+		q.push(b->rchild);
+	}
+ }
+}
+// 部分需要的接口
+// 将二叉树分为根，左子树，右子树三个部分
+//Status BreakBiTree(TreeNode& T, TreeNode& L, TreeNode& R);
+// 获取树的深度
+//int BiTreeDepth(TreeNode*T);
+
+//改变光标位置
+void gotoxy(int x, int y)
+{
+	// 更新光标位置
+	COORD pos;
+	HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	pos.X = x;
+	pos.Y = y;
+	SetConsoleCursorPosition(hOutput, pos);
+}
+
+// 获取树的深度
+Status BiTreeDepth(BiTree T) {
+	if (T == NULL) return 0;
+
+	int depthLeft, depthRight;
+	depthLeft = BiTreeDepth(T->lchild);
+	depthRight = BiTreeDepth(T->rchild);
+
+	return 1 + (depthLeft > depthRight ? depthLeft : depthRight);
+}
+
+// 将二叉树分为根，左子树，右子树三个部分
+Status BreakBiTree(BiTree&T, BiTree&L, BiTree&R) 
+{
+	if (T == NULL) return ERROR;
+	L = T->lchild;
+	R = T->rchild;
+	return OK;
+}
+
+/*
+* 递归打印打印出树形
+* T		正在打印的树
+* depth	目前在打印树的第几层
+* right	该子树是否为右子树
+* tap	目前子树需要的相对偏移数量
+*/
+Status Traverse_R(BiTree T, int depth, int right, int tap)
+{
+	if (T == NULL) return OK;
+
+	// 获取一次树的初始高度，用于计算相对偏移数量
+	static int treeDepth = BiTreeDepth(T);
+	// 记录当前光标位置，用于在递归中记录当前递归时树的位置
+	int x, y;
+	// 拆分树，将树的左右子树拆分开来
+	BiTree L,R;
+	BreakBiTree(T,L,R);
+
+	// 计算父树的偏移量
+	int tap1 = tap * pow((double)2, treeDepth - depth);
+	// 计算子树的偏移量
+	int tap2 = right * (pow((double)2, treeDepth - depth));
+	// 计算半偏移量
+	int tap3 = pow((double)2, treeDepth - depth - 1);
+
+	// 获取根的坐标
+	// x 计算方法为：父偏移量 + 子偏移量 + 半偏移量 - 1
+	// y 计算方法为：目前打印的层数 * 2
+	x = tap1 + tap2 + tap3 - 1+8;//++++++++++++++++
+	y = depth * 2+7;//********************
+
+	// 打印根的位置
+	gotoxy(x * 2+8, y+7);//*****************+++++++++++++++
+	printf("%d", T->num);
+
+	// 在打印子树时，当前层数+1
+	depth++;
+	// 计算子树的父偏移量
+	tap = tap * 2 + (right == 1 ? 2 : 0);
+	if (L == NULL && R == NULL) return OK;
+	else if (R == NULL) {
+		// 打印左子树的位置
+		gotoxy(x * 2 - tap3+8, y + 1+7);//*************++++++++++++++++++
+		printf("┏");
+		for (int i = 0; i < tap3 - 1; i++) printf("━");
+		printf("┛");
+		Traverse_R(L, depth, 0, tap);
+	}
+	else if (L == NULL) {
+		// 打印右子树的位置
+		gotoxy(x * 2+8, y + 1+7);//****************+++++++++++++++++
+		printf("┗");
+		for (int i = 0; i < tap3 - 1; i++) printf("━");
+		printf("┓");
+		Traverse_R(R, depth, 1, tap);
+	}
+	else {
+		// 打印左右子树的位置
+		gotoxy(x * 2 - tap3+8, y + 1+7);//******************+++++++++++++
+		printf("┏");
+		for (int i = 0; i < tap3 - 1; i++) printf("━");
+		printf("┻");
+		for (int i = 0; i < tap3 - 1; i++) printf("━");
+		printf("┓");
+		Traverse_R(L, depth, 0, tap);
+		Traverse_R(R, depth, 1, tap);
+	}
+}
+
+// 打印树形接口
+void Traverse(TreeNode*T) 
+{
+	cout << endl;
+	cout << "  您好！您的二叉树生成如下：";
+	Traverse_R(T, 0, 0, 0);
+	//return OK;
+}
+int main()
+{
+	cout<<"请输入二叉树1先序序列："<<endl;
+	int a[100]={0},h,i=0;
+	while(cin>>h)
+	{
+		a[i++]=h;
+		if(cin.get()=='\n')
+			break;
+	}
+    cout<<"请输入二叉树1中序序列："<<endl;
+	int b[100]={0},r=0;
+	while(cin>>h)
+	{
+		b[r++]=h;
+		if(cin.get()=='\n')
+			break;
+	}
+    TreeNode *root1;
+	root1=BuildTree(a,b,i);
+	//cout<<"二叉树1图形化输出："<<endl;
+	//Traverse(root1);
+	//cout<<endl;
+	cout<<"请输入二叉树2层序遍历："<<endl;
+	vector<int>c;
+    vector<int>d;
+    int num=0;
+    while(cin>>num)
+    {    
+       c.push_back(num);
+        if(getchar()=='\n')
+            break;
+    }
+	
+	cout<<"请输入二叉树2中序遍历："<<endl;
+	while(cin>>num)
+    {
+        d.push_back(num);
+          if(getchar()=='\n')
+            break;
+    }
+	TreeNode *root2=reBuildTree(c,d);
+	//cout<<"二叉树2图形化输出:"<<endl;
+	//Traverse(root2);
+	//cout<<endl;
+	TreeNode *root3=mergeTrees(root1,root2);
+	
+	cout<<"合并后的先序遍历结果："<<endl;
+	presearch2(root3);
+    cout<<endl;
+	cout<<"合并后的层序遍历结果："<<endl;
+	printBinTree(root3);
+	cout<<endl;
+	cout<<"合并后二叉树图形化输出："<<endl;
+	Traverse(root3);
+	cout<<endl;
+	system("pause");
+    return 0;
+}
